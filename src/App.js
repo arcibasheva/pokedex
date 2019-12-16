@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import * as R from 'ramda'
 
 export default class App extends Component {
     constructor(props) {
@@ -38,6 +39,13 @@ export default class App extends Component {
         })
     }
 
+    setFilter = (filter) => {
+        this.setState({
+            page: 1,
+            filter: filter.trim(),
+        })
+    }
+
     changePage = (event) => {
         this.setState({
             page: Number(event.target.id)
@@ -45,10 +53,13 @@ export default class App extends Component {
     }
 
     render() {
-        const {pokemons, page, perPage} = this.state
-        const indexOfLastPokemon = page * perPage;
-        const indexOfFirstPokemon = indexOfLastPokemon - perPage;
-        const pokemonsPerPage = pokemons.slice(indexOfFirstPokemon, indexOfLastPokemon);
+        let {pokemons, page, perPage, filter} = this.state
+        pokemons = pokemons.filter(pokemon => {
+            return pokemon.name.indexOf(filter) > -1
+        })
+        // const indexOfLastPokemon = page * perPage;
+        // const indexOfFirstPokemon = indexOfLastPokemon - perPage;
+        const pokemonsPerPage = R.splitEvery(perPage, pokemons)[page-1];
         const pageNumbers = [];
         for (let i = 1; i <= Math.ceil(pokemons.length / perPage); i++) {
             pageNumbers.push(i);
@@ -67,13 +78,16 @@ export default class App extends Component {
                 </button>
             );
         });
+
+
         return <div>
-            {pokemonsPerPage.map(pokemon => {
+            Name: <input placeholder="Pikachu..." value={filter} onChange={e => this.setFilter(e.target.value)}/>
+            {pokemonsPerPage && pokemonsPerPage.length ? pokemonsPerPage.map(pokemon => {
                 return <div key={pokemon.id} style={{display: 'flex', alignItems: "center"}}>
                     <img src={pokemon.src} alt={`Photo of ${pokemon.name}`}/>
                     <p>{pokemon.name}</p>
                 </div>
-            })}
+            })  : <div>Loading...</div> }
             <div style={{display: 'flex'}}>
                 {renderPageNumbers}
             </div>
